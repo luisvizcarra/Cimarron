@@ -1,84 +1,135 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Conecta 4 AR - Kids Edition</title>
+    <title>Conecta 4 AR - Modo Pro</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
-        #ui { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; color: white; font-family: sans-serif; text-align: center; text-shadow: 2px 2px #000; pointer-events: none; }
-        .btn-reset { pointer-events: auto; background: #e74c3c; border: none; padding: 10px; color: white; border-radius: 5px; cursor: pointer; }
+        #ui { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; font-family: 'Comic Sans MS', sans-serif; text-align: center; pointer-events: none; }
+        .mensaje { background: rgba(0,0,0,0.7); color: white; padding: 15px 30px; border-radius: 50px; border: 3px solid #fff; font-size: 24px; margin-bottom: 10px; }
+        .btn-reset { pointer-events: auto; background: #FF5722; border: none; padding: 10px 20px; color: white; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: 0 4px #bf360c; }
+        .btn-reset:active { box-shadow: 0 0 #bf360c; transform: translateY(4px); }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
     <div id="ui">
-        <h1 id="mensaje">¡TURNO OCRE!</h1>
-        <button class="btn-reset" onclick="location.reload()">Reiniciar Juego</button>
+        <div id="mensaje" class="mensaje">¡TURNO NARANJA!</div>
+        <button class="btn-reset" onclick="location.reload()">🔄 REINICIAR</button>
     </div>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" cursor="rayOrigin: mouse" vr-mode-ui="enabled: false">
-        
         <a-marker preset="hiro">
-            <a-entity id="tablero-ajustado" rotation="-90 0 0" position="0 0 0">
+            <a-entity id="escena-juego" rotation="-90 0 0">
+                <a-box position="0 1.5 -0.1" scale="3.8 3.3 0.15" color="#2980b9" metalness="0.5"></a-box>
                 
-                <a-box position="0 1.5 -0.1" scale="3.8 3.3 0.15" color="#3498db" opacity="0.9" metalness="0.5"></a-box>
-
-                <a-entity id="columns">
-                    <a-box class="col" id="col0" position="-1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col1" position="-1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col2" position="-0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col3" position="0.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col4" position="0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col5" position="1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
-                    <a-box class="col" id="col6" position="1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                <a-entity id="interactores">
+                    <a-box class="col" data-index="0" position="-1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="1" position="-1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="2" position="-0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="3" position="0.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="4" position="0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="5" position="1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
+                    <a-box class="col" data-index="6" position="1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.1" color="#fff"></a-box>
                 </a-entity>
-
-                <a-plane position="0 0 0.2" rotation="-90 0 0" width="4" height="0.5" color="#2ecc71"></a-plane>
             </a-entity>
         </a-marker>
-
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        let turno = "ocre"; 
-        const colores = { ocre: "#FF9F43", verde: "#1DD1A1" };
-        const conteoColumnas =; 
-        const ALTO_CELDA = 0.5;
-        const POS_INICIAL_Y = 0.25;
+        const COLS = 7, FILAS = 6;
+        let tablero = Array(COLS).fill().map(() => Array(FILAS).fill(null));
+        let conteoFichas = Array(COLS).fill(0);
+        let turno = "naranja"; // naranja vs azul
         let juegoActivo = true;
 
-        document.querySelectorAll('.col').forEach((col, index) => {
-            col.addEventListener('mouseenter', function() { this.setAttribute('color', '#f1c40f'); });
-            col.addEventListener('mouseleave', function() { this.setAttribute('color', '#ecf0f1'); });
+        const config = {
+            naranja: { hex: "#FF8C00", nombre: "NARANJA" },
+            azul: { hex: "#00d2ff", nombre: "AZUL" }
+        };
 
+        document.querySelectorAll('.col').forEach(col => {
             col.addEventListener('click', function() {
                 if (!juegoActivo) return;
+                
+                const c = parseInt(this.getAttribute('data-index'));
+                const f = conteoFichas[c];
 
-                if (conteoColumnas[index] < 6) { 
-                    const xPos = this.getAttribute('position').x;
-                    const yPos = POS_INICIAL_Y + (conteoColumnas[index] * ALTO_CELDA);
+                if (f < FILAS) {
+                    // Guardar en matriz lógica
+                    tablero[c][f] = turno;
                     
-                    const balon = document.createElement('a-sphere');
-                    balon.setAttribute('position', `${xPos} 4 0`);
-                    balon.setAttribute('radius', '0.22');
-                    balon.setAttribute('color', colores[turno]);
-                    balon.setAttribute('shadow', '');
-                    
-                    // Animación de caída tipo rebote
-                    balon.setAttribute('animation', `property: position; to: ${xPos} ${yPos} 0; dur: 700; easing: easeOutBounce`);
-                    
-                    document.querySelector('#tablero-ajustado').appendChild(balon);
-                    
-                    conteoColumnas[index]++;
-                    
-                    // Cambio de turno y feedback visual
-                    turno = (turno === "ocre") ? "verde" : "ocre";
-                    document.getElementById('mensaje').innerText = `¡TURNO ${turno.toUpperCase()}!`;
-                    document.getElementById('mensaje').style.color = colores[turno];
+                    // Crear ficha 3D
+                    const xPos = -1.5 + (c * 0.5);
+                    const yPos = 0.25 + (f * 0.5);
+                    crearFicha(xPos, yPos, config[turno].hex);
+
+                    if (verificarGanador(c, f)) {
+                        finalizarJuego(`¡GANÓ EL EQUIPO ${config[turno].nombre}! 🏆`);
+                    } else {
+                        conteoFichas[c]++;
+                        turno = (turno === "naranja") ? "azul" : "naranja";
+                        actualizarUI();
+                    }
                 }
             });
         });
+
+        function crearFicha(x, y, color) {
+            const f = document.createElement('a-sphere');
+            f.setAttribute('position', `${x} 4 0`);
+            f.setAttribute('radius', '0.22');
+            f.setAttribute('color', color);
+            f.setAttribute('animation', `property: position; to: ${x} ${y} 0; dur: 600; easing: easeOutBounce`);
+            document.querySelector('#escena-juego').appendChild(f);
+        }
+
+        function actualizarUI() {
+            const msj = document.getElementById('mensaje');
+            msj.innerText = `¡TURNO ${config[turno].nombre}!`;
+            msj.style.borderColor = config[turno].hex;
+        }
+
+        function finalizarJuego(texto) {
+            juegoActivo = false;
+            const msj = document.getElementById('mensaje');
+            msj.innerText = texto;
+            msj.style.background = "#2ecc71";
+        }
+
+        function verificarGanador(c, f) {
+            const colorActual = tablero[c][f];
+            const direcciones = [
+               ,  // Horizontal
+               ,  // Vertical
+               ,  // Diagonal /
+                [1, -1]  // Diagonal \
+            ];
+
+            for (let [dc, df] of direcciones) {
+                let cuenta = 1;
+                // Buscar hacia un lado
+                cuenta += contarEnDireccion(c, f, dc, df, colorActual);
+                // Buscar hacia el lado opuesto
+                cuenta += contarEnDireccion(c, f, -dc, -df, colorActual);
+                
+                if (cuenta >= 4) return true;
+            }
+            return false;
+        }
+
+        function contarEnDireccion(c, f, dc, df, color) {
+            let total = 0;
+            let nc = c + dc;
+            let nf = f + df;
+            while (nc >= 0 && nc < COLS && nf >= 0 && nf < FILAS && tablero[nc][nf] === color) {
+                total++;
+                nc += dc;
+                nf += df;
+            }
+            return total;
+        }
     </script>
 </body>
 </html>
