@@ -1,34 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Conecta 4 AR - Vertical</title>
+    <title>Conecta 4 AR - Kids Edition</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        #ui { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 10; color: white; font-family: sans-serif; text-align: center; text-shadow: 2px 2px #000; pointer-events: none; }
+        .btn-reset { pointer-events: auto; background: #e74c3c; border: none; padding: 10px; color: white; border-radius: 5px; cursor: pointer; }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
 
-    <a-scene 
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false;" 
-        cursor="rayOrigin: mouse"
-        vr-mode-ui="enabled: false">
+    <div id="ui">
+        <h1 id="mensaje">¡TURNO OCRE!</h1>
+        <button class="btn-reset" onclick="location.reload()">Reiniciar Juego</button>
+    </div>
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" cursor="rayOrigin: mouse" vr-mode-ui="enabled: false">
         
         <a-marker preset="hiro">
             <a-entity id="tablero-ajustado" rotation="-90 0 0" position="0 0 0">
                 
-                <a-box position="0 1.5 -0.1" scale="3.7 3.2 0.1" color="#2c3e50" opacity="0.8"></a-box>
+                <a-box position="0 1.5 -0.1" scale="3.8 3.3 0.15" color="#3498db" opacity="0.9" metalness="0.5"></a-box>
 
                 <a-entity id="columns">
-                    <a-box class="col" id="col0" position="-1.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col1" position="-1.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col2" position="-0.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col3" position="0.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col4" position="0.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col5" position="1.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
-                    <a-box class="col" id="col6" position="1.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                    <a-box class="col" id="col0" position="-1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col1" position="-1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col2" position="-0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col3" position="0.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col4" position="0.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col5" position="1.0 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
+                    <a-box class="col" id="col6" position="1.5 1.5 0.1" scale="0.45 3 0.2" opacity="0.2" color="#ecf0f1"></a-box>
                 </a-entity>
 
-                <a-plane position="0 0 0" rotation="-90 0 0" width="4" height="1" color="#7fb3d5" opacity="0.5"></a-plane>
+                <a-plane position="0 0 0.2" rotation="-90 0 0" width="4" height="0.5" color="#2ecc71"></a-plane>
             </a-entity>
         </a-marker>
 
@@ -37,13 +42,19 @@
 
     <script>
         let turno = "ocre"; 
-        const colores = { ocre: "#CC7722", verde: "#228B22" };
-        const conteoColumnas =; // Arreglo corregido
+        const colores = { ocre: "#FF9F43", verde: "#1DD1A1" };
+        const conteoColumnas =; 
         const ALTO_CELDA = 0.5;
         const POS_INICIAL_Y = 0.25;
+        let juegoActivo = true;
 
         document.querySelectorAll('.col').forEach((col, index) => {
+            col.addEventListener('mouseenter', function() { this.setAttribute('color', '#f1c40f'); });
+            col.addEventListener('mouseleave', function() { this.setAttribute('color', '#ecf0f1'); });
+
             col.addEventListener('click', function() {
+                if (!juegoActivo) return;
+
                 if (conteoColumnas[index] < 6) { 
                     const xPos = this.getAttribute('position').x;
                     const yPos = POS_INICIAL_Y + (conteoColumnas[index] * ALTO_CELDA);
@@ -52,14 +63,19 @@
                     balon.setAttribute('position', `${xPos} 4 0`);
                     balon.setAttribute('radius', '0.22');
                     balon.setAttribute('color', colores[turno]);
+                    balon.setAttribute('shadow', '');
                     
-                    balon.setAttribute('animation', `property: position; to: ${xPos} ${yPos} 0; dur: 500; easing: easeOutBounce`);
+                    // Animación de caída tipo rebote
+                    balon.setAttribute('animation', `property: position; to: ${xPos} ${yPos} 0; dur: 700; easing: easeOutBounce`);
                     
-                    // IMPORTANTE: El balón debe ser hijo del grupo rotado
                     document.querySelector('#tablero-ajustado').appendChild(balon);
                     
                     conteoColumnas[index]++;
+                    
+                    // Cambio de turno y feedback visual
                     turno = (turno === "ocre") ? "verde" : "ocre";
+                    document.getElementById('mensaje').innerText = `¡TURNO ${turno.toUpperCase()}!`;
+                    document.getElementById('mensaje').style.color = colores[turno];
                 }
             });
         });
