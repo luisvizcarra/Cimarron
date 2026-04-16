@@ -6,8 +6,9 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <style>
         #ui { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10; font-family: 'Arial Rounded MT Bold', sans-serif; text-align: center; pointer-events: none; width: 100%; }
-        .mensaje { background: rgba(255,255,255,0.9); color: #2c3e50; padding: 10px 20px; border-radius: 30px; border: 4px solid #3498db; font-size: 20px; display: inline-block; margin-bottom: 10px; }
-        .btn-reset { pointer-events: auto; background: #FF5722; border: none; padding: 12px 25px; color: white; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 5px #bf360c; }
+        .mensaje { background: rgba(255,255,255,0.9); color: #2c3e50; padding: 10px 20px; border-radius: 30px; border: 4px solid #3498db; font-size: 20px; display: inline-block; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-reset { pointer-events: auto; background: #FF5722; border: none; padding: 12px 25px; color: white; border-radius: 25px; cursor: pointer; font-size: 16px; box-shadow: 0 5px #bf360c; transition: all 0.2s; }
+        .btn-reset:active { box-shadow: 0 2px #bf360c; transform: translateY(3px); }
     </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
@@ -64,9 +65,7 @@
             azul: { hex: "#00d2ff", nombre: "AZUL" }
         };
 
-        // Lógica de interacción
         document.querySelectorAll('.col').forEach(col => {
-            // Cambio de color visual al pasar el cursor
             col.addEventListener('mouseenter', function() {
                 if(juegoActivo) this.setAttribute('color', '#F1C40F'); 
             });
@@ -88,7 +87,7 @@
                     crearFicha(xPos, yPos, config[turno].hex);
 
                     if (verificarGanador(c, f)) {
-                        finalizarJuego(`¡VICTORIA ${config[turno].nombre}! 👑`);
+                        finalizarJuego(`¡VICTORIA EQUIPO ${config[turno].nombre}! 👑`);
                     } else {
                         conteoFichas[c]++;
                         turno = (turno === "naranja") ? "azul" : "naranja";
@@ -100,11 +99,19 @@
 
         function crearFicha(x, y, color) {
             const f = document.createElement('a-sphere');
-            f.setAttribute('position', `${x} 5 0`); // Caen desde muy arriba
+            f.setAttribute('position', `${x} 5 0`); // La pelota aparece arriba
             f.setAttribute('radius', '0.22');
             f.setAttribute('color', color);
             f.setAttribute('material', 'metalness: 0.4; roughness: 0.3');
-            f.setAttribute('animation', `property: position; to: ${x} ${y} 0; dur: 800; easing: easeOutBounce`);
+            
+            // Animación de caída con rebote
+            f.setAttribute('animation', {
+                property: 'position',
+                to: `${x} ${y} 0`,
+                dur: 800,
+                easing: 'easeOutBounce'
+            });
+            
             document.querySelector('#escena-juego').appendChild(f);
         }
 
@@ -112,20 +119,26 @@
             const msj = document.getElementById('mensaje');
             msj.innerText = `Turno: ${config[turno].nombre}`;
             msj.style.borderColor = config[turno].hex;
+            msj.style.color = config[turno].hex;
         }
 
         function finalizarJuego(texto) {
             juegoActivo = false;
-            document.getElementById('mensaje').innerText = texto;
-            document.getElementById('mensaje').style.background = "#2ecc71";
-            document.getElementById('mensaje').style.color = "white";
+            const msj = document.getElementById('mensaje');
+            msj.innerText = texto;
+            msj.style.background = "#2ecc71";
+            msj.style.color = "white";
+            msj.style.borderColor = "white";
         }
 
         function verificarGanador(c, f) {
             const colorActual = tablero[c][f];
+            // Direcciones: Horizontal, Vertical, Diagonal /, Diagonal \
             const direcciones = [,,, [1, -1]];
+            
             for (let [dc, df] of direcciones) {
-                let cuenta = 1 + contarEnDireccion(c, f, dc, df, colorActual) + contarEnDireccion(c, f, -dc, -df, colorActual);
+                let cuenta = 1 + contarEnDireccion(c, f, dc, df, colorActual) + 
+                             contarEnDireccion(c, f, -dc, -df, colorActual);
                 if (cuenta >= 4) return true;
             }
             return false;
