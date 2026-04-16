@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Conecta 4 AR - Google Sites</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_color; matrixCodeType: 3x3;" 
+        cursor="rayOrigin: mouse" 
+        vr-mode-ui="enabled: false">
+        
+        <a-marker preset="hiro">
+            <a-box position="0 1.5 -0.1" scale="3.7 3.2 0.1" color="#2c3e50" opacity="0.8"></a-box>
+
+            <a-entity id="columns">
+                <a-box class="col" id="col0" position="-1.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col1" position="-1.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col2" position="-0.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col3" position="0.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col4" position="0.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col5" position="1.0 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+                <a-box class="col" id="col6" position="1.5 1.5 0" scale="0.4 3 0.2" opacity="0.1" color="white"></a-box>
+            </a-entity>
+
+            <a-plane rotation="-90 0 0" width="4" height="4" color="#7fb3d5" opacity="0.5"></a-plane>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        let turno = "ocre"; 
+        const colores = { ocre: "#CC7722", verde: "#228B22" };
+        
+        // CORRECCIÓN: Definición correcta del array de conteo
+        const conteoColumnas =; 
+        
+        const ALTO_CELDA = 0.5;
+        const POS_INICIAL_Y = 0.25;
+
+        // Añadimos los eventos a las columnas
+        document.querySelectorAll('.col').forEach((col, index) => {
+            col.addEventListener('click', function() {
+                if (conteoColumnas[index] < 6) { 
+                    const xPos = this.getAttribute('position').x;
+                    const yPos = POS_INICIAL_Y + (conteoColumnas[index] * ALTO_CELDA);
+                    
+                    const balon = document.createElement('a-sphere');
+                    balon.setAttribute('position', `${xPos} 4 0`);
+                    balon.setAttribute('radius', '0.22');
+                    balon.setAttribute('color', colores[turno]);
+                    
+                    balon.setAttribute('animation', `property: position; to: ${xPos} ${yPos} 0; dur: 500; easing: easeOutBounce`);
+                    
+                    document.querySelector('a-marker').appendChild(balon);
+                    
+                    conteoColumnas[index]++;
+                    turno = (turno === "ocre") ? "verde" : "ocre";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
